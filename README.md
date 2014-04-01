@@ -9,14 +9,10 @@ var TestQueue = require('testqueue');
 
 new TestQueue()
 	.addTest( function( pass, fail ) {
-
 		// Async task
-
 	} )
 	.addTest( function( pass, fail ) {
-
 		// Async task
-
 	} )
 	.on( 'pass', function(name) {
 		console.log( name, ' has passed' );
@@ -48,6 +44,7 @@ testQueue is an event emitter.
 ### Events
 
 `pass` A test has passed.  The name of the test is passed as the first argument
+
 `fail` A test has failed.  The name of the test is passed as the first argument and the error message as the second.
 
 ### Methods
@@ -57,11 +54,12 @@ testQueue.addTest( name, function(pass,fail){} )
 ```
 
 `name` - String - The name of the test
-`function(pass,fail){}` - Function - Funcation that runs the test.  Use the callbacks pass and fail to return the outcome of the test.  Pass an error to fail.
+
+`function(pass,fail){}` - Function - The test.  Use the callbacks pass and fail to return the outcome of the test.  Pass an error to fail.
 
 If the function throws an uncaught error this will be caught and the test will be failed.
 
-Returns testQueue.
+Returns `testQueue`.
 
 ```javascript
 testQueue.run()
@@ -83,7 +81,7 @@ The promise will resolve or reject with a object with the properties
 TestQueue.toConsole(options)
 ```
 
-Returns an instance of TestQueue with events and returned promise setup to output the process to the console.  This is not customisable.
+Returns an instance of TestQueue with events and returned promise setup to output messages to the console.
 
 
 
