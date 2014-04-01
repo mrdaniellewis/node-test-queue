@@ -1,0 +1,4 @@
+{ 
+	"name" : "testqueue",
+	"main" : "./lib/testqueue.js" 
+}
