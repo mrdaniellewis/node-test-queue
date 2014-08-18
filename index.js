@@ -6,13 +6,7 @@
  */
 var events = require('events');
 var util = require('util');
-
-if ( typeof Promise === 'undefined' ) {
-	/* jshint -W040 */
-	(function(global) { global.Promise = require('promise-polyfill'); }(this));
-	/* jshint +W040 */
-}
-
+var Promise = require('promise-polyfill');
 var style = require('console-style');
 
 function TestQueue(options) {
