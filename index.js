@@ -134,22 +134,16 @@ TestQueue.toConsole = function(testQueue) {
 
 	testQueue
 		.on( 'pass', function(name) {
-			if ( this.verbose ) {
-				console.log( style.green( 'Pass: ' + name ) );
-			}
+			console.log( style.green( 'Pass: ' + name ) );
 		} )
 		.on( 'fail', function(name,e) {
-			if ( !this.verbose ) {
-				return;
-			}
-			console.log( style.red( 'Fail: ' + name ) );
-			console.log( style.bold.redBG( e.message ) );
-			console.log( e.stack );
+			console.error( style.red( 'Fail: ' + name ) );
+			console.error( style.bold.redBG( e.message ) );
+			console.error( e.stack );
 		} );
 
-	testQueue.run = function(verbose) {
-		this.verbose = verbose !== false;
-
+	testQueue.run = function() {
+		
 		return TestQueue.prototype.run.call(this)
 			.then( 
 				function(results) {
@@ -161,7 +155,7 @@ TestQueue.toConsole = function(testQueue) {
 				},
 				function(results) {
 					var total = results.failed + results.passed;
-					console.log( 
+					console.error( 
 						style.bold.redBG( 
 							'Failure: ' 
 								+ total + ' of ' + results.total + ' test' + ( results.total === 1 ? '' : 's' )
