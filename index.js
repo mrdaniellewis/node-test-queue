@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 /**
  *	Simple test framework
  */
@@ -5,9 +8,12 @@ var events = require('events');
 var util = require('util');
 
 if ( typeof Promise === 'undefined' ) {
-	var Promise = require('promise');
+	/* jshint -W040 */
+	(function(global) { global.Promise = require('promise-polyfill'); }(this));
+	/* jshint +W040 */
 }
-var style = require('styleconsole');
+
+var style = require('console-style');
 
 function TestQueue(options) {
 	
@@ -16,11 +22,11 @@ function TestQueue(options) {
 	events.EventEmitter.call(this);
 	
 	this.stopOnFail = options.stopOnFail !== false;
+	this.setupFn = function(){};
+	this.teardownFn = function(){};
 
 	this.tests = [];
 }
-
-
 
 util.inherits( TestQueue, events.EventEmitter );
 
@@ -29,6 +35,22 @@ util.inherits( TestQueue, events.EventEmitter );
  */
 TestQueue.prototype.addTest = function( name, fn ) {
 	this.tests.push( { name: name, fn: fn } );
+	return this;
+};
+
+/**
+ *	Adds a setup function
+ */
+TestQueue.prototype.setup = function( fn ) {
+	this.setupFn = fn;
+	return this;
+};
+
+/**
+ *	Adds a teardown function
+ */
+TestQueue.prototype.teardown = function( fn ) {
+	this.teardownFn = fn;
 	return this;
 };
 
@@ -42,11 +64,12 @@ TestQueue.prototype.run = function() {
 	this.failed = 0;
 
 	var ret = new Promise( function(pass,fail) {
-		this._testQueuePass = pass;
-		this._testQueueFail = fail;
-	}.bind(this) );
+			this._testQueuePass = pass;
+			this._testQueueFail = fail;
+		}.bind(this) );
 
-	this._testQueueNext();
+	Promise.resolve(this.setupFn())
+		.then( this._testQueueNext.bind(this) );
 
 	return ret;
 
@@ -61,14 +84,13 @@ TestQueue.prototype._testQueueNext = function() {
 
 	var test = this.tests[this._testQueueCursor];
 
-	new Promise( test.fn )
+	new Promise( test.fn.bind(this) )
 		.then( this._onPass.bind(this, test.name), this._onError.bind(this, test.name) );
 
 	++this._testQueueCursor;
 };
 
 TestQueue.prototype._onPass = function( name, value ) {
-	
 	++this.passed;
 	this.emit( 'pass', name, value );
 	this._testQueueNext();
@@ -82,6 +104,7 @@ TestQueue.prototype._onError = function(name, e) {
 
 	if ( this.stopOnFail ) {
 		this._onFinish();
+		return;
 	}
 
 	this._testQueueNext();
@@ -89,38 +112,49 @@ TestQueue.prototype._onError = function(name, e) {
 
 TestQueue.prototype._onFinish = function() {
 
-	var results = {
-		total: this.tests.length,
-		passed: this.passed,
-		failed: this.failed,
-	};
+	Promise.resolve(this.teardownFn())
+		.then( function() {
+			var results = {
+				total: this.tests.length,
+				passed: this.passed,
+				failed: this.failed,
+			};
 
-	if ( this.failed > 0 ) {
-		this._testQueueFail(results);
-	} else {
-		this._testQueuePass(results);
-	}
+			if ( this.failed > 0 ) {
+				this._testQueueFail(results);
+			} else {
+				this._testQueuePass(results);
+			}
+
+		}.bind(this) );
 
 };
 
 module.exports = TestQueue;
 
-// *** Colourised console output ***
+/**
+ *	Modify an existing test queue so it outputs to the console
+ *	using some pretty colours
+ */
+TestQueue.toConsole = function(testQueue) {
 
-TestQueue.toConsole = function(options) {
-
-	var testQueue = new TestQueue(options);
 	testQueue
 		.on( 'pass', function(name) {
-			console.log( style.green( 'Pass: ' + name ) );
+			if ( this.verbose ) {
+				console.log( style.green( 'Pass: ' + name ) );
+			}
 		} )
 		.on( 'fail', function(name,e) {
+			if ( !this.verbose ) {
+				return;
+			}
 			console.log( style.red( 'Fail: ' + name ) );
 			console.log( style.bold.redBG( e.message ) );
 			console.log( e.stack );
 		} );
 
-	testQueue.run = function() {
+	testQueue.run = function(verbose) {
+		this.verbose = verbose !== false;
 
 		return TestQueue.prototype.run.call(this)
 			.then( 

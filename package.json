@@ -1,4 +1,12 @@
 { 
-	"name" : "testqueue",
-	"main" : "./lib/testqueue.js" 
+	"name" : "test-queue",
+	"description": "Simple test framework using Promises",
+	"version": "0.1.0",
+	"license": "MIT",
+	"author": "Daniel Lewis",
+	"repository": "https://github.com/mrdaniellewis/node-test-queue.git",
+	"dependencies": {
+		"promise-polyfill": "^1.1.2",
+		"console-style": "^0.1"
+	}
 }

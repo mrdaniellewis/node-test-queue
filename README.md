@@ -1,11 +1,11 @@
 # Test queue
 
-Simple test framework that allows you to queue up a sequence async of tests.
+Simple test framework that allows you to queue up a sequence of async tests.
 
 ## Usage
 
 ```javascript
-var TestQueue = require('testqueue');
+var TestQueue = require('test-queue');
 
 new TestQueue()
 	.addTest( function( pass, fail ) {
@@ -14,11 +14,17 @@ new TestQueue()
 	.addTest( function( pass, fail ) {
 		// Async task
 	} )
+	.setup( function() {
+		// function run before the tests start
+	} )
+	.teardown( function() {
+		// function run after all the tests have finished whether they pass or fail
+	} )
 	.on( 'pass', function(name) {
 		console.log( name, ' has passed' );
 	} )
-	.on( 'fail', function(name) {
-		console.log( name, ' has failed' );
+	.on( 'fail', function( name, e ) {
+		console.log( name, ' has failed with error', e );
 	} )
 	.run()
 		.then( 
@@ -50,7 +56,9 @@ testQueue is an event emitter.
 ### Methods
 
 ```javascript
-testQueue.addTest( name, function(pass,fail){} )
+testQueue.addTest( name, function(pass,fail){
+	// The test goes here
+} )
 ```
 
 `name` - String - The name of the test
@@ -59,7 +67,32 @@ testQueue.addTest( name, function(pass,fail){} )
 
 If the function throws an uncaught error this will be caught and the test will be failed.
 
-Returns `testQueue`.
+Returns the `TestQueue` object for chaining
+
+----
+
+```javascript
+testQueue.setup( function(){
+	// Setup tasks
+} )
+```
+The setup function is run before all tests.
+Return a Promise object if setup is async.
+
+----
+
+```javascript
+testQueue.teardown( function(){
+	// Teardown tasks
+} )
+```
+The teardown function is run after all tests have finished
+whether they passed or failed.
+
+Return a Promise object if teardown is async.
+
+
+----
 
 ```javascript
 testQueue.run()
@@ -78,10 +111,13 @@ The promise will resolve or reject with a object with the properties
 ### Static methods
 
 ```javascript
-TestQueue.toConsole(options)
+TestQueue.toConsole(testQueue)
 ```
 
-Returns an instance of TestQueue with events and returned promise setup to output messages to the console.
+Modifies an existing instance of TestQueue so it outputs to the console
+each time a test passes or fails and the statistics when the tests finish.
+
+Output is coloured red and green as appropriate.
 
 
 
