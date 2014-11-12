@@ -63,6 +63,9 @@ TestQueue.prototype.run = function() {
 		}.bind(this) );
 
 	Promise.resolve(this.setupFn())
+		.then( function() {
+			this.emit( 'start' );
+		}.bind(this) )
 		.then( this._testQueueNext.bind(this) );
 
 	return ret;
@@ -78,11 +81,38 @@ TestQueue.prototype._testQueueNext = function() {
 
 	var test = this.tests[this._testQueueCursor];
 
-	new Promise( test.fn.bind(this) )
-		.then( this._onPass.bind(this, test.name), this._onError.bind(this, test.name) );
+	if ( test.fn instanceof TestQueue ) {
+		
+		test.fn.on( 'pass', this.emit.bind( this, 'pass') );
+		test.fn.on( 'fail', this.emit.bind( this, 'fail') );
+		test.fn.on( 'info', this.emit.bind( this, 'info') );
+		test.fn.on( 'start', this.emit.bind( this, 'start', test.name ) );
+		test.fn.on( 'finish', function(results) {
+			this.emit( 'finish', results, test.name );
+		}.bind(this) );
+
+		test.fn.run()
+			.then( 
+				this._onPassQueue.bind(this, test.name), 
+				this._onErrorQueue.bind(this, test.name) 
+			);
+
+	} else {
+		new Promise( test.fn.bind(this) )
+			.then( 
+				this._onPass.bind(this, test.name), 
+				this._onError.bind(this, test.name) 
+			);
+	}	
 
 	++this._testQueueCursor;
 };
+
+TestQueue.prototype._onPassQueue = function( name, results ) {
+	this.passed += results.passed;
+	this._testQueueNext();
+};
+
 
 TestQueue.prototype._onPass = function( name, value ) {
 	++this.passed;
@@ -90,8 +120,22 @@ TestQueue.prototype._onPass = function( name, value ) {
 	this._testQueueNext();
 };
 
-TestQueue.prototype._onError = function(name, e) {
+TestQueue.prototype._onErrorQueue = function( name, results ) {
+	
+	console.log( name, results ); 
 
+	this.failed += results.failed;
+	this.passed += results.passed;
+
+	if ( this.stopOnFail ) {
+		this._onFinish();
+		return;
+	}
+
+	this._testQueueNext();
+};
+
+TestQueue.prototype._onError = function(name, e) {
 
 	++this.failed;
 	this.emit( 'fail', name, e );
@@ -106,14 +150,15 @@ TestQueue.prototype._onError = function(name, e) {
 
 TestQueue.prototype._onFinish = function() {
 
+	var results = {
+		passed: this.passed,
+		failed: this.failed,
+	};
+
+	this.emit( 'finish', results );
+
 	Promise.resolve(this.teardownFn())
 		.then( function() {
-			var results = {
-				total: this.tests.length,
-				passed: this.passed,
-				failed: this.failed,
-			};
-
 			if ( this.failed > 0 ) {
 				this._testQueueFail(results);
 			} else {
@@ -132,15 +177,37 @@ module.exports = TestQueue;
  */
 TestQueue.toConsole = function(testQueue) {
 
+	var queueDepth = 0;
+
 	testQueue
 		.on( 'pass', function(name) {
 			console.log( style.green( 'Pass: ' + name ) );
 		} )
 		.on( 'fail', function(name,e) {
 			console.error( style.red( 'Fail: ' + name ) );
-			console.error( style.bold.redBG( e.message ) );
-			console.error( e.stack );
+			if ( e instanceof Error ) {
+				console.error( style.bold.redBG( e.message ) );
+				console.error( e.stack );
+			}
+			
+		} )
+		.on( 'start', function(name) {
+			var text = 'Start';
+			if ( typeof name === 'string' ) {
+				++queueDepth;
+				text = new Array(queueDepth+1).join('#') + ' ' + text;
+			}
+			console.log( text, name || '' );
+		} )
+		.on( 'finish', function(results, name) {	
+			var text = 'Finish';
+			if ( typeof name === 'string' ) {
+				text = new Array(queueDepth+1).join('#') + ' ' + text;
+				--queueDepth;
+			}
+			console.log( text, name || ''  );
 		} );
+
 
 	testQueue.run = function() {
 		
@@ -158,8 +225,9 @@ TestQueue.toConsole = function(testQueue) {
 					console.error( 
 						style.bold.redBG( 
 							'Failure: ' 
-								+ total + ' of ' + results.total + ' test' + ( results.total === 1 ? '' : 's' )
-								+ ' ran and ' + results.failed + ' test' + ( results.failed === 1 ? '' : 's' )
+								+ total + ' test' + (total === 1 ? '' : 's' )
+								+ ' ran and ' + results.passed + ' test'+ ( results.passed === 1 ? '' : 's' )
+								+ ' passed and ' + results.failed + ' test' + ( results.failed === 1 ? '' : 's' )
 								+ ' failed '
 						) 
 					);

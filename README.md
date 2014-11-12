@@ -53,6 +53,10 @@ testQueue is an event emitter.
 
 `fail` A test has failed.  The name of the test is passed as the first argument and the error message as the second.
 
+`start` Emitted after startup when the first test starts.  
+
+`finish` Emitted before the teardown after the last test runs.
+
 ### Methods
 
 ```javascript
@@ -104,7 +108,6 @@ Returns a promise.
 
 The promise will resolve or reject with a object with the properties
 
-* `total`: total number of tests
 * `passed`: number of tests passed
 * `failed`: number of tests failed
 

@@ -14,7 +14,7 @@ var quiet = process.argv.slice(-2).some( function(arg) {
 	return arg === '-q' || arg === '--quiet';
 } );
 
-TestQueue.toConsole( new TestQueue()
+var testQueue = new TestQueue()
 	.addTest( '2 tests that will pass', function(pass,fail) { 
 
 		new TestQueue()
@@ -39,7 +39,7 @@ TestQueue.toConsole( new TestQueue()
 					function(results) {
 
 						try {
-							assert.deepEqual( results, { total: 2, passed: 2, failed: 0 } );
+							assert.deepEqual( results, { passed: 2, failed: 0 } );
 						} catch(e) {
 							fail(e);
 						}
@@ -78,7 +78,7 @@ TestQueue.toConsole( new TestQueue()
 					},
 					function(results) {
 						try {
-							assert.deepEqual( results, { total: 2, passed: 0, failed: 1 } );
+							assert.deepEqual( results, { passed: 0, failed: 1 } );
 						} catch(e) {
 							fail(e);
 						}
@@ -124,7 +124,7 @@ TestQueue.toConsole( new TestQueue()
 					},
 					function(results) {
 						try {
-							assert.deepEqual( results, { total: 4, passed: 2, failed: 2 } );
+							assert.deepEqual( results, { passed: 2, failed: 2 } );
 						} catch(e) {
 							fail(e);
 						}
@@ -164,7 +164,7 @@ TestQueue.toConsole( new TestQueue()
 
 						try {
 							assert.equal( isTornDown, true );
-							assert.deepEqual( results, { total: 1, passed: 1, failed: 0 } );
+							assert.deepEqual( results, { passed: 1, failed: 0 } );
 						} catch(e) {
 							fail(e);
 						}
@@ -217,7 +217,7 @@ TestQueue.toConsole( new TestQueue()
 
 						try {
 							assert.equal( isTornDown, true );
-							assert.deepEqual( results, { total: 1, passed: 1, failed: 0 } );
+							assert.deepEqual( results, { passed: 1, failed: 0 } );
 						} catch(e) {
 							fail(e);
 						}
@@ -247,7 +247,7 @@ TestQueue.toConsole( new TestQueue()
 					function(results) {
 						try {
 							assert.equal( isTornDown, true );
-							assert.deepEqual( results, { total: 1, passed: 0, failed: 1 } );
+							assert.deepEqual( results, { passed: 0, failed: 1 } );
 						} catch(e) {
 							fail(e);
 						}
@@ -286,12 +286,34 @@ TestQueue.toConsole( new TestQueue()
 			assert.equal( this.foo, 'bar' );
 		};
 		testQueue.run().then( pass, fail );		
-	} )
+	} );
 
-).run(!quiet)
+var testQueue2 = new TestQueue()
+	.addTest( 'sub test 1', function( pass, fail ) {
+		pass();
+	} )
+	.addTest( 'sub test 2', function( pass, fail ) {
+		pass();
+	} );
+
+var testQueue3 = new TestQueue()
+	.addTest( 'sub test 3', function( pass, fail ) {
+		pass();
+	} )
+	.addTest( 'sub test 4', function( pass, fail ) {
+		pass();
+	} );
+
+testQueue2.addTest( 'sub sub test queue', testQueue3 );
+
+
+testQueue.addTest( 'Sub test queue', testQueue2 );
+
+TestQueue.toConsole( testQueue ).run()
 	.catch( function() {
 		process.exit(1);
 	} );
+	
 	
 
 
