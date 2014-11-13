@@ -221,7 +221,7 @@ TestQueue.toConsole = function(testQueue) {
 				function(results) {
 					console.log( 
 						style.black.greenBG( 
-							'Success: all ' + results.passed + ' tests passed  (' + results.time + ' ms)'
+							'Success: all ' + results.passed + ' tests passed (' + results.time + ' ms)'
 						) 
 					);
 				},
