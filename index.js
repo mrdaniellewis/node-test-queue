@@ -8,6 +8,8 @@ var events = require('events');
 var util = require('util');
 var Promise = require('promise-polyfill');
 var style = require('console-style');
+var fs = require('fs');
+var path = require('path');
 
 function TestQueue(options) {
 	
@@ -90,7 +92,9 @@ TestQueue.prototype._testQueueNext = function() {
 		test.fn.on( 'pass', this.emit.bind( this, 'pass') );
 		test.fn.on( 'fail', this.emit.bind( this, 'fail') );
 		test.fn.on( 'info', this.emit.bind( this, 'info') );
-		test.fn.on( 'start', this.emit.bind( this, 'start', test.name ) );
+		test.fn.on( 'start', function(name) {
+			this.emit( 'start', name || test.name );
+		}.bind(this) );
 		test.fn.on( 'finish', function(results) {
 			this.emit( 'finish', results, test.name );
 		}.bind(this) );
@@ -154,10 +158,6 @@ TestQueue.prototype._onError = function(name, e) {
 
 TestQueue.prototype._onFinish = function() {
 
-	
-
-	
-
 	Promise.resolve(this.teardownFn())
 		.then( function() {
 			var time = process.hrtime(this._start);
@@ -203,14 +203,11 @@ TestQueue.toConsole = function(testQueue) {
 			
 		} )
 		.on( 'start', function(name) {
-			if ( typeof name === 'string' ) {
-				indent += '  ';
-			}
 			console.log( indent + 'Start', name || '' );
 			indent += '  ';
 		} )
 		.on( 'finish', function(results, name) {	
-			indent = indent.slice(0,-4);
+			indent = indent.slice(0,-2);
 		} )
 		.on( 'info', function() {	
 			console.log( indent + util.inspect.apply(util, arguments) );
@@ -244,5 +241,40 @@ TestQueue.toConsole = function(testQueue) {
 	};
 
 	return testQueue;
+};
+
+/**
+ *	Tests all tests in a directory
+ *	Each file in the directory should return a test
+ *	@param {String} dir Full path to the directory
+ */
+TestQueue.testDirectory = function( dir, options ) {
+	options = options || {};
+	options.stripNumber = options.stripNumber === undefined ? true : options.stripNumber;
+
+	var testQueue = new TestQueue();
+	var files = fs.readdirSync(dir);
+	files.forEach( function(name) {
+		var extension = path.extname(name);
+		if ( /^\.(?:js|node)$/.test( extension ) ) {
+			var module = require( path.resolve( dir, name ) );
+			var tests = module.tests;
+			if ( !tests || ( typeof tests != 'function' && !(tests instanceof TestQueue) ) ) {
+				console.warn( 'module', path.resolve( dir, name ), 'does not contain any tests' );
+				return;
+			}
+			var testName = name.slice(0,-extension.length);
+			if ( options.stripNumber ) {
+				testName = testName.replace( /^\d+\. /, '' );
+			}
+			testQueue.addTest( 
+				testName, 
+				tests
+			);
+		}
+	} );
+
+	return testQueue;
+
 };
 
