@@ -53,6 +53,8 @@ TestQueue.prototype.teardown = function( fn ) {
  */
 TestQueue.prototype.run = function() {
 	
+	this._start = process.hrtime();
+
 	this._testQueueCursor = 0;
 	this.passed = 0;
 	this.failed = 0;
@@ -150,15 +152,22 @@ TestQueue.prototype._onError = function(name, e) {
 
 TestQueue.prototype._onFinish = function() {
 
-	var results = {
-		passed: this.passed,
-		failed: this.failed,
-	};
+	
 
-	this.emit( 'finish', results );
+	
 
 	Promise.resolve(this.teardownFn())
 		.then( function() {
+			var time = process.hrtime(this._start);
+
+			var results = {
+				passed: this.passed,
+				failed: this.failed,
+				time: time[0] * 1000 + time[1]/1e6
+			};
+
+			this.emit( 'finish', results );
+
 			if ( this.failed > 0 ) {
 				this._testQueueFail(results);
 			} else {
@@ -177,14 +186,14 @@ module.exports = TestQueue;
  */
 TestQueue.toConsole = function(testQueue) {
 
-	var queueDepth = 0;
+	var indent = '';
 
 	testQueue
 		.on( 'pass', function(name) {
-			console.log( style.green( 'Pass: ' + name ) );
+			console.log( style.green( indent + 'Pass: ' + name ) );
 		} )
 		.on( 'fail', function(name,e) {
-			console.error( style.red( 'Fail: ' + name ) );
+			console.error( style.red( indent + 'Fail: ' + name ) );
 			if ( e instanceof Error ) {
 				console.error( style.bold.redBG( e.message ) );
 				console.error( e.stack );
@@ -192,20 +201,17 @@ TestQueue.toConsole = function(testQueue) {
 			
 		} )
 		.on( 'start', function(name) {
-			var text = 'Start';
 			if ( typeof name === 'string' ) {
-				++queueDepth;
-				text = new Array(queueDepth+1).join('#') + ' ' + text;
+				indent += '  ';
 			}
-			console.log( text, name || '' );
+			console.log( indent + 'Start', name || '' );
+			indent += '  ';
 		} )
 		.on( 'finish', function(results, name) {	
-			var text = 'Finish';
-			if ( typeof name === 'string' ) {
-				text = new Array(queueDepth+1).join('#') + ' ' + text;
-				--queueDepth;
-			}
-			console.log( text, name || ''  );
+			indent = indent.slice(0,-4);
+		} )
+		.on( 'info', function() {	
+			console.log( indent + util.inspect.apply(util, arguments) );
 		} );
 
 
@@ -216,7 +222,7 @@ TestQueue.toConsole = function(testQueue) {
 				function(results) {
 					console.log( 
 						style.black.greenBG( 
-							'Success: all ' + results.passed + ' tests passed '
+							'Success: all ' + results.passed + ' tests passed  (' + results.time + ' ms)'
 						) 
 					);
 				},
@@ -228,7 +234,7 @@ TestQueue.toConsole = function(testQueue) {
 								+ total + ' test' + (total === 1 ? '' : 's' )
 								+ ' ran and ' + results.passed + ' test'+ ( results.passed === 1 ? '' : 's' )
 								+ ' passed and ' + results.failed + ' test' + ( results.failed === 1 ? '' : 's' )
-								+ ' failed '
+								+ ' failed (' + results.time + ' ms)'
 						) 
 					);
 				}

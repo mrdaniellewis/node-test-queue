@@ -39,7 +39,9 @@ var testQueue = new TestQueue()
 					function(results) {
 
 						try {
-							assert.deepEqual( results, { passed: 2, failed: 0 } );
+							assert.equal( results.passed, 2 );
+							assert.equal( results.failed, 0 );
+							assert.ok( typeof results.time === 'number' && results.time );
 						} catch(e) {
 							fail(e);
 						}
@@ -78,7 +80,9 @@ var testQueue = new TestQueue()
 					},
 					function(results) {
 						try {
-							assert.deepEqual( results, { passed: 0, failed: 1 } );
+							assert.equal( results.passed, 0 );
+							assert.equal( results.failed, 1 );
+							assert.ok( typeof results.time === 'number' && results.time );
 						} catch(e) {
 							fail(e);
 						}
@@ -124,7 +128,9 @@ var testQueue = new TestQueue()
 					},
 					function(results) {
 						try {
-							assert.deepEqual( results, { passed: 2, failed: 2 } );
+							assert.equal( results.passed, 2 );
+							assert.equal( results.failed, 2 );
+							assert.ok( typeof results.time === 'number' && results.time );
 						} catch(e) {
 							fail(e);
 						}
@@ -164,7 +170,9 @@ var testQueue = new TestQueue()
 
 						try {
 							assert.equal( isTornDown, true );
-							assert.deepEqual( results, { passed: 1, failed: 0 } );
+							assert.equal( results.passed, 1 );
+							assert.equal( results.failed, 0 );
+							assert.ok( typeof results.time === 'number' && results.time );
 						} catch(e) {
 							fail(e);
 						}
@@ -217,7 +225,9 @@ var testQueue = new TestQueue()
 
 						try {
 							assert.equal( isTornDown, true );
-							assert.deepEqual( results, { passed: 1, failed: 0 } );
+							assert.equal( results.passed, 1 );
+							assert.equal( results.failed, 0 );
+							assert.ok( typeof results.time === 'number' && results.time );
 						} catch(e) {
 							fail(e);
 						}
@@ -247,7 +257,9 @@ var testQueue = new TestQueue()
 					function(results) {
 						try {
 							assert.equal( isTornDown, true );
-							assert.deepEqual( results, { passed: 0, failed: 1 } );
+							assert.equal( results.passed, 0 );
+							assert.equal( results.failed, 1 );
+							assert.ok( typeof results.time === 'number' && results.time );
 						} catch(e) {
 							fail(e);
 						}
