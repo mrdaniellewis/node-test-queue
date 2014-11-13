@@ -192,10 +192,10 @@ TestQueue.toConsole = function(testQueue) {
 
 	testQueue
 		.on( 'pass', function(name) {
-			console.log( style.green( indent + 'Pass: ' + name ) );
+			console.log( style.green( indent + '✓ ' + name ) );
 		} )
 		.on( 'fail', function(name,e) {
-			console.error( style.red( indent + 'Fail: ' + name ) );
+			console.error( style.red( indent + '× ' + name ) );
 			if ( e instanceof Error ) {
 				console.error( style.bold.redBG( e.message ) );
 				console.error( e.stack );
@@ -203,7 +203,7 @@ TestQueue.toConsole = function(testQueue) {
 			
 		} )
 		.on( 'start', function(name) {
-			console.log( indent + 'Start', name || '' );
+			console.log( indent + 'Start:', name || '' );
 			indent += '  ';
 		} )
 		.on( 'finish', function(results, name) {	
