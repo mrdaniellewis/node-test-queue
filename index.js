@@ -64,9 +64,11 @@ TestQueue.prototype.run = function() {
 			this._testQueueFail = fail;
 		}.bind(this) );
 
+	this.emit( 'start' );
+
 	Promise.resolve(this.setupFn())
 		.then( function() {
-			this.emit( 'start' );
+			
 		}.bind(this) )
 		.then( this._testQueueNext.bind(this) );
 
