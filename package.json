@@ -1,7 +1,7 @@
 { 
 	"name" : "test-queue",
 	"description": "Simple test framework using Promises",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"license": "MIT",
 	"author": "Daniel Lewis",
 	"repository": "https://github.com/mrdaniellewis/node-test-queue.git",

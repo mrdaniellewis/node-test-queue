@@ -166,6 +166,8 @@ Given a directory of .js or .node files, requires the file and adds `exports.tes
 
 `options.stripNumber` - Boolean, optional, default = `true`.  For files named like '1. file name', stips the number from the name allowing you to define a test order.
 
+`options.exclude` - String[], optional, default = `['index.js','node.js']`.  Files not to run as tests.  Allows you to keep all tests and the controller in the same directory.
+
 Returns a `TestQueue` object.
 
 

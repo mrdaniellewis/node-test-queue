@@ -251,6 +251,7 @@ TestQueue.toConsole = function(testQueue) {
 TestQueue.testDirectory = function( dir, options ) {
 	options = options || {};
 	options.stripNumber = options.stripNumber === undefined ? true : options.stripNumber;
+	options.exclude = options.exclude || ['index.js','index.node'];
 
 	var testQueue = new TestQueue();
 	var files = fs.readdirSync(dir);
@@ -272,14 +273,11 @@ TestQueue.testDirectory = function( dir, options ) {
 			return;
 		}
 
-		var fullPath = path.resolve( dir, name );
-
-		if ( __filename === fullPath ) {
-			// Self aware
+		if ( options.exclude.indexOf(name) > -1 ) {
 			return;
 		}
 
-		var module = require( fullPath );
+		var module = require( path.resolve( dir, name ) );
 		var tests = module.tests;
 		if ( !tests || ( typeof tests != 'function' && !(tests instanceof TestQueue) ) ) {
 			console.warn( 'module', path.resolve( dir, name ), 'does not contain any tests' );
