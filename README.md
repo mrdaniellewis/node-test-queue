@@ -1,5 +1,7 @@
 # Test queue
 
+[![npm version](https://badge.fury.io/js/test-queue.svg)](http://badge.fury.io/js/test-queue)
+
 A simple test framework for running async tests in node.
 
 This framework lets you queue up a series of async tests and run them.  It can output the results of the tests to the console, and run a directory of tests.
