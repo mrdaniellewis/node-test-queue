@@ -1,18 +1,26 @@
 # Test queue
 
-Simple test framework that allows you to queue up a sequence of async tests.
+A simple test framework for running async tests in node.
+
+This framework lets you queue up a series of async tests and run them.  It can output the results of the tests to the console, and run a directory of tests.
 
 ## Usage
 
 ```javascript
+
+// Use the node assert libary for your assertions
+var assert = require('assert');
 var TestQueue = require('test-queue');
 
-new TestQueue()
+// Create a new queue of tests
+var queue = new TestQueue()
 	.addTest( function( pass, fail ) {
-		// Async task
+		// Add a test
+		// Call pass or fail to pass or fail
+		// If an error is thrown this will automatically call fail
 	} )
 	.addTest( function( pass, fail ) {
-		// Async task
+		// Add another test
 	} )
 	.setup( function() {
 		// function run before the tests start
@@ -25,16 +33,23 @@ new TestQueue()
 	} )
 	.on( 'fail', function( name, e ) {
 		console.log( name, ' has failed with error', e );
-	} )
-	.run()
-		.then( 
-			function(stats) {
-				console.log( 'All tests passed')
-			},
-			function(stats) {
-				console.log( 'Some tests did\'t pass ');
-			}
-		);
+	} );
+
+// Set the queue up for outputting to the console
+TestQueue.toConsole(queue);
+
+// Run the tests
+queue.run()
+	.then( 
+		// Run returns a Promise
+		function(stats) {
+			console.log( 'All tests passed')
+		},
+		function(stats) {
+			console.log( 'Some tests did\'t pass ');
+		}
+	);
+
 ```
 
 ### Constructor
@@ -53,16 +68,18 @@ testQueue is an event emitter.
 
 `fail` A test has failed.  The name of the test is passed as the first argument and the error message as the second.
 
-`start` Emitted after startup when the first test starts.  
+`start` Emitted before the tests start.  If the test is a TestQueue the first argument will be the queue name
 
-`finish` Emitted before the teardown after the last test runs.
+`finish` Emitted when the tests have finished.  The first argument is the results.  If the test is a TestQueue the second argument will be the queue name.
+
+`info` Can be used to emit general information about what a test is doing.
 
 ### Methods
 
 ```javascript
 testQueue.addTest( name, function(pass,fail){
 	// The test goes here
-} )
+} );
 ```
 
 `name` - String - The name of the test
@@ -70,6 +87,20 @@ testQueue.addTest( name, function(pass,fail){
 `function(pass,fail){}` - Function - The test.  Use the callbacks pass and fail to return the outcome of the test.  Pass an error to fail.
 
 If the function throws an uncaught error this will be caught and the test will be failed.
+
+Returns the `TestQueue` object for chaining.
+
+----
+
+```javascript
+testQueue.addTest( name, subTestQueue );
+```
+
+`name` - String - The name of the test
+
+`subTestQueue` - TestQueue - A TestQueue.  The sub queue of tests to run.
+
+All events from the subqueue will be emitted by the parent testQueue.
 
 Returns the `TestQueue` object for chaining
 
@@ -110,6 +141,7 @@ The promise will resolve or reject with a object with the properties
 
 * `passed`: number of tests passed
 * `failed`: number of tests failed
+* `time`: the time in ms the tests took to run
 
 ### Static methods
 
@@ -120,7 +152,21 @@ TestQueue.toConsole(testQueue)
 Modifies an existing instance of TestQueue so it outputs to the console
 each time a test passes or fails and the statistics when the tests finish.
 
-Output is coloured red and green as appropriate.
+Output is coloured red and green and indented as appropriate.
+
+----
+
+```javascript
+TestQueue.testDirectory( path, options );
+```
+
+Given a directory of .js or .node files, requires the file and adds `exports.tests` to a test queue using the file name as the test name. 
+
+`path` - String.  Absolute path to the directory
+
+`options.stripNumber` - Boolean, optional, default = `true`.  For files named like '1. file name', stips the number from the name allowing you to define a test order.
+
+Returns a `TestQueue` object.
 
 
 
