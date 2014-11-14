@@ -106,11 +106,30 @@ TestQueue.prototype._testQueueNext = function() {
 			);
 
 	} else {
-		new Promise( test.fn.bind(this) )
+
+		var pass, fail;
+		var promise = new Promise( function( _pass, _fail ) {
+				pass = _pass;
+				fail = _fail;
+			} )
 			.then( 
-				this._onPass.bind(this, test.name), 
-				this._onError.bind(this, test.name) 
+				this._onPass.bind( this, test.name ),
+				this._onError.bind( this, test.name )
 			);
+		try {
+			var ret = test.fn.call( this, pass,fail );
+	
+			if ( ret instanceof Promise ) {
+				ret.then( pass, fail );
+			} else if ( ret instanceof Error ) {
+				fail(ret);
+			} else if ( ret ) {
+				pass(ret);
+			}
+
+		} catch(e) {
+			fail(e);
+		}
 	}	
 
 	++this._testQueueCursor;

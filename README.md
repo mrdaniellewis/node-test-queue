@@ -17,12 +17,19 @@ var TestQueue = require('test-queue');
 // Create a new queue of tests
 var queue = new TestQueue()
 	.addTest( function( pass, fail ) {
-		// Add a test
-		// Call pass or fail to pass or fail
-		// If an error is thrown this will automatically call fail
+		// Do some testing
+		// Pass the test
+		pass(); 
 	} )
 	.addTest( function( pass, fail ) {
-		// Add another test
+		// Do more testing
+		// Another way to pass the test
+		return 'pass';
+	} )
+	.addTest( function( pass, fail ) {
+		// Do more testing
+		// Oh dear, this one has failed
+		return Promise.reject('fail');
 	} )
 	.setup( function() {
 		// function run before the tests start
@@ -86,7 +93,9 @@ testQueue.addTest( name, function(pass,fail){
 
 `name` - String - The name of the test
 
-`function(pass,fail){}` - Function - The test.  Use the callbacks pass and fail to return the outcome of the test.  Pass an error to fail.
+`function(pass,fail){}` - Function - The test.
+
+The test can either use the pass or fail callbacks to pass or fail, or return something truthy to pass, or return an exception to fail, or return a Promise whose resolution will determine if the test passes or fails.
 
 If the function throws an uncaught error this will be caught and the test will be failed.
 
