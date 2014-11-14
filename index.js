@@ -254,24 +254,46 @@ TestQueue.testDirectory = function( dir, options ) {
 
 	var testQueue = new TestQueue();
 	var files = fs.readdirSync(dir);
+
+	// Sort alphabetically (not sure if readdir does this anyway)
+	files = files
+		.map( function(name) {
+			return [name.toLowerCase(),name];
+		} )
+		.sort()
+		.map( function(ar) {
+			return ar[1];
+		} );
+
 	files.forEach( function(name) {
 		var extension = path.extname(name);
-		if ( /^\.(?:js|node)$/.test( extension ) ) {
-			var module = require( path.resolve( dir, name ) );
-			var tests = module.tests;
-			if ( !tests || ( typeof tests != 'function' && !(tests instanceof TestQueue) ) ) {
-				console.warn( 'module', path.resolve( dir, name ), 'does not contain any tests' );
-				return;
-			}
-			var testName = name.slice(0,-extension.length);
-			if ( options.stripNumber ) {
-				testName = testName.replace( /^\d+\. /, '' );
-			}
-			testQueue.addTest( 
-				testName, 
-				tests
-			);
+		
+		if ( !/^\.(?:js|node)$/.test( extension ) ) {
+			return;
 		}
+
+		var fullPath = path.resolve( dir, name );
+
+		if ( __filename === fullPath ) {
+			// Self aware
+			return;
+		}
+
+		var module = require( fullPath );
+		var tests = module.tests;
+		if ( !tests || ( typeof tests != 'function' && !(tests instanceof TestQueue) ) ) {
+			console.warn( 'module', path.resolve( dir, name ), 'does not contain any tests' );
+			return;
+		}
+		var testName = name.slice(0,-extension.length);
+		if ( options.stripNumber ) {
+			testName = testName.replace( /^\d+\. /, '' );
+		}
+		testQueue.addTest( 
+			testName, 
+			tests
+		);
+		
 	} );
 
 	return testQueue;
