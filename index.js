@@ -148,8 +148,6 @@ TestQueue.prototype._onPass = function( name, value ) {
 };
 
 TestQueue.prototype._onErrorQueue = function( name, results ) {
-	
-	console.log( name, results ); 
 
 	this.failed += results.failed;
 	this.passed += results.passed;
