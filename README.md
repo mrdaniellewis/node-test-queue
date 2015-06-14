@@ -4,6 +4,8 @@
 
 A simple test framework for running async tests in node.
 
+*I'd recommend you actually use "mocha"[https://www.npmjs.com/package/mocha] rather than this (despite its nasty use of globals).*
+
 This framework lets you queue up a series of async tests and run them.  It can output the results of the tests to the console, and run a directory of tests.
 
 ## Usage
