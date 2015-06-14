@@ -2,7 +2,7 @@
 "use strict";
 
 var path = require('path');
-var TestQueue = require('test-queue');
+var TestQueue = require('../');
 
 var tests = TestQueue.testDirectory( __dirname );
 TestQueue.toConsole(tests)

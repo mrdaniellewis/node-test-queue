@@ -1,7 +1,7 @@
 /*jshint node:true */
 "use strict";
 
-var TestQueue = require('test-queue');
+var TestQueue = require('../');
 var assert = require('assert');
 
 var testQueue = new TestQueue()

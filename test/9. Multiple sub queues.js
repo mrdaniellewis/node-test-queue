@@ -1,7 +1,7 @@
 /*jshint node:true */
 "use strict";
 
-var TestQueue = require('test-queue');
+var TestQueue = require('../');
 
 var testQueue1 = new TestQueue()
 	.addTest( 'sub test 1', function( pass, fail ) {
